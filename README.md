@@ -1,5 +1,5 @@
 # Paririmbon - Terminologi Sunda Kuno (Knowledge Graph & Semantic Search)
-<img src="./public/ParirimbonLogo.png" width="200" alt="Siti Aisyah" />
+<img src="./app/public/ParirimbonLogo.png" width="200" alt="Siti Aisyah" />
 Paririmbon adalah aplikasi penelusuran digital dan pencarian semantik (*semantic search*) interaktif untuk menjelajahi terminologi Sunda Kuno dari **11 naskah klasik (manuskrip)** abad 14–16 Masehi. 
 
 Aplikasi ini mengintegrasikan **Knowledge Graph** berbasis standar semantik internasional **RDF/OWL** dengan triplestore **Apache Jena Fuseki** sebagai mesin kueri **SPARQL 1.1**, dan disajikan dengan antarmuka web modern yang tangguh menggunakan **Next.js 15**, **Tailwind CSS v4**, **GSAP Animations**, dan **TanStack Query (React Query)**.
@@ -10,9 +10,9 @@ Aplikasi ini mengintegrasikan **Knowledge Graph** berbasis standar semantik inte
 
 | No | Foto Profil | Nama Anggota | NIM | Peran Utama |
 |----|-------------|--------------|-----|-------------|
-| 1 | <img src="./public/Ica.jpg" width="60" alt="Siti Aisyah" /> | **Siti Aisyah Nurdyanti** | `140810230015` | Ontologist & Backend Developer |
-| 2 | <img src="./public/Cla.jpg" width="60" alt="Clarisya Adeline" /> | **Clarisya Adeline** | `140810230017` | Frontend Architect & UI/UX Designer |
-| 3 | <img src="./public/Awa.jpg" width="60" alt="Nazwa Nashatasya" /> | **Nazwa Nashatasya** | `140810230019` | SPARQL Integrator & Data Engineer |
+| 1 | <img src="./app/public/Ica.jpg" width="60" alt="Siti Aisyah" /> | **Siti Aisyah Nurdyanti** | `140810230015` | Ontologist & Backend Developer |
+| 2 | <img src="./app/public/Cla.jpg" width="60" alt="Clarisya Adeline" /> | **Clarisya Adeline** | `140810230017` | Frontend Architect & UI/UX Designer |
+| 3 | <img src="./app/public/Awa.jpg" width="60" alt="Nazwa Nashatasya" /> | **Nazwa Nashatasya** | `140810230019` | SPARQL Integrator & Data Engineer |
 
 ---
 
@@ -33,19 +33,19 @@ Berikut adalah beberapa tampilan antarmuka dari aplikasi **Paririmbon**:
 
 ### 1. Beranda (ParHome)
 Halaman depan premium yang memuat deskripsi proyek, statistik dataset semantik secara dinamis, dan kartu navigasi naskah klasik Sunda Kuno yang responsif.
-![Beranda Paririmbon](./public/ParHome.png)
+![Beranda Paririmbon](./app/public/ParHome.png)
 
 ### 2. Pencarian Semantik (ParSearch)
 Halaman pencarian bertenaga SPARQL dengan kemampuan penyorotan teks (*highlight*), pencarian kosakata Sunda Kuno secara realtime, dan filter kategoris kelas kata.
-![Pencarian Paririmbon](./public/ParSearch.png)
+![Pencarian Paririmbon](./app/public/ParSearch.png)
 
 ### 3. Halaman Tentang Proyek (ParAbout)
 Halaman informasi lengkap mengenai proyek semantik Paririmbon, arsitektur RDF, skema ontologi (OWL Class, Object Property, Data Property), serta biodata tim pengembang.
-![Tentang Proyek Paririmbon](./public/ParAbout.png)
+![Tentang Proyek Paririmbon](./app/public/ParAbout.png)
 
 ### 4. Halaman Detail & Knowledge Graph (ParDetail)
 Halaman detail kosakata dan peta relasi semantik (*Knowledge Graph*) Sunda Kuno yang dinamis. Halaman ini dilengkapi dengan penulisan aksara Sunda asli, definisi semantik, konteks penggunaan klasik, manuskrip asal, serta visualisasi jalinan semantik interaktif (*Knowledge Graph*) yang memvisualisasikan relasi antarkata (seperti sinonim, antonim, turunan, bagian dari, dsb).
-![Detail & Graf Paririmbon](./public/ParDetail.png)
+![Detail & Graf Paririmbon](./app/public/ParDetail.png)
 
 ---
 
