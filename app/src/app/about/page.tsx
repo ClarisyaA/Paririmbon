@@ -45,7 +45,7 @@ export default function AboutPage() {
               Manuskrip Sunda Kuno (lontar abad 14–16 Masehi) seperti <em>Sanghyang Siksakanda Ng Karesian</em> dan <em>Amanat Galunggung</em> memuat kearifan hidup adat terperinci. Namun, tingginya ambiguitas istilah kuno dan tersebarnya data teks menghambat eksplorasi mendalam bagi para sejarawan dan akademisi modern.
             </p>
             <p>
-              Proyek ini menerapkan teknologi **Semantic Web** untuk melakukan digitalisasi struktural. Kosakata yang mulanya tak terstruktur ditransformasikan ke dalam model ontologi web ontologis (OWL) terinterkoneksi penuh, memungkinkan pencarian semantik bernalar tinggi.
+              Proyek ini menerapkan teknologi Semantic Web untuk melakukan digitalisasi struktural. Kosakata yang mulanya tak terstruktur ditransformasikan ke dalam model ontologi web ontologis (OWL) terinterkoneksi penuh, memungkinkan pencarian semantik bernalar tinggi.
             </p>
           </div>
         </section>
