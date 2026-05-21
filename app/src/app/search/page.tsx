@@ -4,6 +4,7 @@ import React, { useState, useEffect, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Search, SearchX, AlertCircle, FileText, Compass } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
 
 interface SearchResult {
   id: string;
@@ -90,91 +91,89 @@ function SearchContent() {
 
   const [searchQuery, setSearchQuery] = useState(queryParam === "*" ? "" : queryParam);
   const [selectedClass, setSelectedClass] = useState(classParam);
-  const [results, setResults] = useState<SearchResult[]>([]);
-  const [total, setTotal] = useState(0);
-  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page") ?? "1"));
-  const [selectedLimit, setSelectedLimit] = useState(searchParams.get("limit") ?? "10");
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [isOffline, setIsOffline] = useState(false);
-
-  const limitVal = selectedLimit === "all" ? -1 : Number(selectedLimit);
-  const totalPages = limitVal === -1 ? 1 : Math.ceil(total / limitVal);
+  const pageNum = Number(searchParams.get("page") ?? "1");
+  const lim = searchParams.get("limit") ?? "10";
+  const [currentPage, setCurrentPage] = useState(pageNum);
+  const [selectedLimit, setSelectedLimit] = useState(lim);
 
   // Sync state with URL params
   useEffect(() => {
-    const pageNum = Number(searchParams.get("page") ?? "1");
-    const lim = searchParams.get("limit") ?? "10";
-
     setSearchQuery(queryParam === "*" ? "" : queryParam);
     setSelectedClass(classParam);
     setCurrentPage(pageNum);
     setSelectedLimit(lim);
+  }, [queryParam, classParam, pageNum, lim]);
 
-    if (queryParam) {
-      performSearch(queryParam, classParam, pageNum, lim);
-    } else {
-      setResults([]);
-      setTotal(0);
-    }
-  }, [queryParam, classParam, searchParams]);
-
-  const performSearch = async (q: string, cls: string, pageNum: number, lim: string) => {
-    setLoading(true);
-    setError(null);
-    try {
+  const { data: searchData, error: searchError, isLoading } = useQuery({
+    queryKey: ["search", queryParam, classParam, pageNum, lim],
+    queryFn: async () => {
       const limitVal = lim === "all" ? -1 : Number(lim);
       const offsetVal = (pageNum - 1) * (limitVal === -1 ? 0 : limitVal);
 
-      const url = `/api/search?q=${encodeURIComponent(q)}` +
-                  `${cls ? `&class=${encodeURIComponent(cls)}` : ""}` +
-                  `&limit=${lim}` +
-                  `&offset=${offsetVal}`;
-      const res = await fetch(url);
-      if (!res.ok) throw new Error("Fuseki server error");
-      const data = await res.json();
-      
-      if (data.results) {
-        setResults(data.results);
-        setTotal(data.total ?? data.results.length);
-        setIsOffline(false);
-      } else {
-        throw new Error("Invalid format");
-      }
-    } catch (err) {
-      console.warn("Search API failed, falling back to mock search:", err);
-      setIsOffline(true);
-      // Simulate keyword matching offline with category class filtering
-      let baseList = MOCK_RESULTS;
-      if (cls === "SundaKunoTerm") {
-        baseList = MOCK_RESULTS.filter((item) => item.wordClass !== "Manuscript");
-      } else if (cls === "Manuscript") {
-        baseList = MOCK_RESULTS.filter((item) => item.wordClass === "Manuscript");
-      }
+      try {
+        const url = `/api/search?q=${encodeURIComponent(queryParam)}` +
+                    `${classParam ? `&class=${encodeURIComponent(classParam)}` : ""}` +
+                    `&limit=${lim}` +
+                    `&offset=${offsetVal}`;
+        const res = await fetch(url);
+        if (!res.ok) throw new Error("Fuseki server error");
+        const json = await res.json();
+        
+        if (json.results) {
+          return {
+            results: json.results as SearchResult[],
+            total: json.total ?? json.results.length,
+            isOffline: false,
+          };
+        } else {
+          throw new Error("Invalid format");
+        }
+      } catch (err) {
+        console.warn("Search API failed, falling back to mock search:", err);
+        // Simulate keyword matching offline with category class filtering
+        let baseList = MOCK_RESULTS;
+        if (classParam === "SundaKunoTerm") {
+          baseList = MOCK_RESULTS.filter((item) => item.wordClass !== "Manuscript");
+        } else if (classParam === "Manuscript") {
+          baseList = MOCK_RESULTS.filter((item) => item.wordClass === "Manuscript");
+        }
 
-      let matches = [];
-      if (q === "*") {
-        matches = baseList;
-      } else {
-        const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
-        matches = baseList.filter(
-          (item) =>
-            regex.test(item.label) ||
-            (item.definition && regex.test(item.definition)) ||
-            (item.manuscriptTitle && regex.test(item.manuscriptTitle))
-        );
+        let matches = [];
+        if (queryParam === "*") {
+          matches = baseList;
+        } else {
+          const regex = new RegExp(queryParam.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+          matches = baseList.filter(
+            (item) =>
+              regex.test(item.label) ||
+              (item.definition && regex.test(item.definition)) ||
+              (item.manuscriptTitle && regex.test(item.manuscriptTitle))
+          );
+        }
+
+        const limitVal = lim === "all" ? -1 : Number(lim);
+        const offsetVal = (pageNum - 1) * (limitVal === -1 ? 0 : limitVal);
+        const sliced = limitVal === -1 ? matches : matches.slice(offsetVal, offsetVal + limitVal);
+
+        return {
+          results: sliced,
+          total: matches.length,
+          isOffline: true,
+        };
       }
+    },
+    enabled: !!queryParam,
+    retry: false,
+  });
 
-      const limitVal = lim === "all" ? -1 : Number(lim);
-      const offsetVal = (pageNum - 1) * (limitVal === -1 ? 0 : limitVal);
-      const sliced = limitVal === -1 ? matches : matches.slice(offsetVal, offsetVal + limitVal);
+  const results = searchData?.results ?? [];
+  const total = searchData?.total ?? 0;
+  const isOffline = searchData?.isOffline ?? false;
+  const loading = isLoading && !!queryParam;
+  const error = searchError ? (searchError instanceof Error ? searchError.message : "Pencarian gagal") : null;
 
-      setResults(sliced);
-      setTotal(matches.length);
-    } finally {
-      setLoading(false);
-    }
-  };
+  const limitVal = selectedLimit === "all" ? -1 : Number(selectedLimit);
+  const totalPages = limitVal === -1 ? 1 : Math.ceil(total / limitVal);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();

@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useEffect, useState, use } from "react";
+import React, { useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import gsap from "gsap";
+import { useQuery } from "@tanstack/react-query";
 import { Loader2, AlertCircle, BookOpen, FileText } from "lucide-react";
 
 interface Relation {
@@ -136,69 +137,90 @@ const MOCK_GRAPH: Record<string, GraphData> = {
   }
 };
 
+function buildFallbackTerm(id: string): TermDetail {
+  const lowerId = id.toLowerCase();
+  if (MOCK_TERMS[lowerId]) return MOCK_TERMS[lowerId];
+  return {
+    id,
+    label: id.charAt(0).toUpperCase() + id.slice(1),
+    scriptTerm: "ᮊᮧᮞᮊᮒ",
+    definition: `Kosakata kuno '${id}' ditemukan dalam manuskrip tertua Sunda, merepresentasikan terminologi penting kehidupan spiritual adat paririmbon.`,
+    usageContext: "Digunakan dalam deskripsi tata karma masyarakat kuno.",
+    wordClass: "SundaKunoTerm",
+    wordClassDisplay: "Kosakata Klasik",
+    manuscript: {
+      title: "Naskah Lontar Kuno Leksikon",
+      period: "Abad 16 Masehi"
+    },
+    relations: []
+  };
+}
+
+function buildFallbackGraph(id: string): GraphData {
+  const lowerId = id.toLowerCase();
+  if (MOCK_GRAPH[lowerId]) return MOCK_GRAPH[lowerId];
+  return {
+    nodes: [{ id, label: id.charAt(0).toUpperCase() + id.slice(1), isCenter: true }],
+    links: []
+  };
+}
+
 export default function TermPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params);
   const router = useRouter();
 
-  const [term, setTerm] = useState<TermDetail | null>(null);
-  const [graphData, setGraphData] = useState<GraphData | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [isOffline, setIsOffline] = useState(false);
-
-  useEffect(() => {
-    async function loadData() {
-      setLoading(true);
+  // --- TanStack Query: Fetch Term Details ---
+  const {
+    data: term,
+    isLoading: isTermLoading,
+    error: termError,
+  } = useQuery<TermDetail>({
+    queryKey: ["term", id],
+    queryFn: async () => {
       try {
-        const termRes = await fetch(`/api/term/${encodeURIComponent(id)}`);
-        const graphRes = await fetch(`/api/graph/${encodeURIComponent(id)}`);
-
-        if (!termRes.ok || !graphRes.ok) throw new Error("Server error");
-
-        const termData = await termRes.json();
-        const gData = await graphRes.json();
-
-        if (termData.error || gData.error) throw new Error("Invalid term ID");
-
-        setTerm(termData);
-        setGraphData(gData);
-        setIsOffline(false);
+        const res = await fetch(`/api/term/${encodeURIComponent(id)}`);
+        if (!res.ok) throw new Error("Server error");
+        const data = await res.json();
+        if (data.error) throw new Error("Invalid term ID");
+        return data as TermDetail;
       } catch (err) {
-        console.warn("API Detail failed, fallback to mock data:", err);
-        setIsOffline(true);
-        const lowerId = id.toLowerCase();
-        if (MOCK_TERMS[lowerId]) {
-          setTerm(MOCK_TERMS[lowerId]);
-          setGraphData(MOCK_GRAPH[lowerId] || { nodes: [], links: [] });
-        } else {
-          // Dynamic offline placeholder
-          const fallbackTerm: TermDetail = {
-            id,
-            label: id.charAt(0).toUpperCase() + id.slice(1),
-            scriptTerm: "ᮊᮧᮞᮊᮒ",
-            definition: `Kosakata kuno '${id}' ditemukan dalam manuskrip tertua Sunda, merepresentasikan terminologi penting kehidupan spiritual adat paririmbon.`,
-            usageContext: "Digunakan dalam deskripsi tata karma masyarakat kuno.",
-            wordClass: "SundaKunoTerm",
-            wordClassDisplay: "Kosakata Klasik",
-            manuscript: {
-              title: "Naskah Lontar Kuno Leksikon",
-              period: "Abad 16 Masehi"
-            },
-            relations: []
-          };
-          setTerm(fallbackTerm);
-          setGraphData({
-            nodes: [{ id, label: fallbackTerm.label, isCenter: true }],
-            links: []
-          });
-        }
-      } finally {
-        setLoading(false);
+        console.warn("Term API failed, using mock fallback:", err);
+        return buildFallbackTerm(id);
       }
-    }
-    loadData();
-  }, [id]);
+    },
+    retry: false,
+    staleTime: 60 * 1000,
+  });
 
-  // Entrance animations using GSAP
+  // --- TanStack Query: Fetch Graph Data ---
+  const {
+    data: graphData,
+    isLoading: isGraphLoading,
+    error: graphError,
+  } = useQuery<GraphData>({
+    queryKey: ["graph", id],
+    queryFn: async () => {
+      try {
+        const res = await fetch(`/api/graph/${encodeURIComponent(id)}`);
+        if (!res.ok) throw new Error("Server error");
+        const data = await res.json();
+        if (data.error) throw new Error("No graph data");
+        return data as GraphData;
+      } catch (err) {
+        console.warn("Graph API failed, using mock fallback:", err);
+        return buildFallbackGraph(id);
+      }
+    },
+    retry: false,
+    staleTime: 60 * 1000,
+  });
+
+  // Combined loading and offline states
+  const loading = isTermLoading || isGraphLoading;
+  // Offline if either query had an error (meaning we fell back to mock data)
+  const isOffline = !!(termError || graphError);
+
+  // Entrance animations using GSAP (runs when data is loaded)
   useEffect(() => {
     if (!loading && term) {
       gsap.fromTo(
@@ -355,23 +377,20 @@ export default function TermPage({ params }: { params: Promise<{ id: string }> }
               {/* Outer SVG Lines */}
               <svg className="absolute inset-0 w-full h-full pointer-events-none z-0">
                 {graphData && graphData.links.map((link, idx) => {
-                  // Centralize nodes positioning in calculations
                   const nodeCount = graphData.nodes.filter(n => !n.isCenter).length;
                   const itemIndex = graphData.nodes.filter(n => !n.isCenter).findIndex(n => n.id === (link.source === term.id ? link.target : link.source));
                   
                   if (itemIndex === -1) return null;
                   
-                  // Calculate coordinates
                   const angle = (itemIndex * 2 * Math.PI) / nodeCount;
-                  const radius = 110; // satellite circle radius
-                  const startX = 200; // Center X
-                  const startY = 180; // Center Y
+                  const radius = 110;
+                  const startX = 200;
+                  const startY = 180;
                   const endX = startX + radius * Math.cos(angle);
                   const endY = startY + radius * Math.sin(angle);
 
                   return (
                     <g key={idx}>
-                      {/* Connection Line */}
                       <line
                         x1={startX}
                         y1={startY}
@@ -381,7 +400,6 @@ export default function TermPage({ params }: { params: Promise<{ id: string }> }
                         strokeWidth="2"
                         strokeDasharray="4 4"
                       />
-                      {/* Glowing dot particle on the path */}
                       <circle r="4" fill="#fbbf24" className="animate-pulse">
                         <animateMotion
                           path={`M ${startX} ${startY} L ${endX} ${endY}`}
@@ -404,7 +422,7 @@ export default function TermPage({ params }: { params: Promise<{ id: string }> }
               {graphData && graphData.nodes.filter(n => !n.id.includes(term.id)).map((node, idx) => {
                 const totalSatellites = graphData.nodes.filter(n => !n.isCenter).length;
                 const angle = (idx * 2 * Math.PI) / totalSatellites;
-                const radius = 120; // Radius distance
+                const radius = 120;
                 
                 const style = {
                   position: "absolute" as const,
@@ -412,7 +430,6 @@ export default function TermPage({ params }: { params: Promise<{ id: string }> }
                   top: `calc(50% + ${radius * Math.sin(angle)}px - 44px)`,
                 };
 
-                // Find relation for this link
                 const link = graphData.links.find(l => l.source === node.id || l.target === node.id);
                 const relInfo = link ? getRelationColor(link.relation) : getRelationColor("");
 

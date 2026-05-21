@@ -215,13 +215,7 @@ PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>`}
         </div>
       </section>
 
-      {/* Footer Info */}
-      <section className="about-fade text-center space-y-2 py-4 border-t border-stone-900">
-        <div className="text-stone-500 text-xs">
-          <p className="font-semibold text-stone-400">Tugas Akhir Matakuliah Semantic Web</p>
-          <p>Semester Genap 2025/2026 • Program Studi Teknik Informatika • Universitas Padjadjaran</p>
-        </div>
-      </section>
+    
 
     </div>
   );

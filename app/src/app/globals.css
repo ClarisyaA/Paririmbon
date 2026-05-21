@@ -1,26 +1,87 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400..900;1,400..900&family=Plus+Jakarta+Sans:ital,wght@0,200..800;1,200..800&family=Noto+Sans+Sundanese&display=swap');
 @import "tailwindcss";
 
+/* ===========================
+   CSS CUSTOM PROPERTIES
+   =========================== */
 :root {
   --font-sans: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
   --font-display: 'Playfair Display', Georgia, 'Times New Roman', serif;
+
+  /* Dark mode (default) */
+  --bg-base:        #0c0a09;
+  --bg-surface:     rgba(28, 25, 23, 0.70);
+  --bg-surface-hover: rgba(28, 25, 23, 0.88);
+  --bg-subtle:      #1c1917;
+  --bg-muted:       #292524;
+
+  --text-primary:   #f5f5f4;
+  --text-secondary: #a8a29e;
+  --text-muted:     #78716c;
+
+  --border-base:    rgba(120, 113, 108, 0.22);
+  --border-hover:   rgba(245, 158, 11, 0.40);
+
+  --scrollbar-track:  #1c1917;
+  --scrollbar-thumb:  #44403c;
+
+  --noise-1: rgba(180, 83, 9, 0.05);
+  --noise-2: rgba(217, 119, 6, 0.05);
+  --glow-color: rgba(245, 158, 11, 0.30);
+  --shadow-card: rgba(217, 119, 6, 0.15);
 }
 
+/* ===========================
+   LIGHT MODE OVERRIDES
+   =========================== */
+[data-theme="light"] {
+  --bg-base:        #faf7f2;
+  --bg-surface:     rgba(255, 251, 245, 0.85);
+  --bg-surface-hover: rgba(255, 248, 235, 0.95);
+  --bg-subtle:      #f3ede3;
+  --bg-muted:       #e8dece;
+
+  --text-primary:   #1c1410;
+  --text-secondary: #5c4a32;
+  --text-muted:     #9a7d5a;
+
+  --border-base:    rgba(180, 120, 60, 0.18);
+  --border-hover:   rgba(180, 83, 9, 0.45);
+
+  --scrollbar-track:  #f3ede3;
+  --scrollbar-thumb:  #c4a26e;
+
+  --noise-1: rgba(180, 83, 9, 0.06);
+  --noise-2: rgba(217, 119, 6, 0.07);
+  --glow-color: rgba(180, 83, 9, 0.20);
+  --shadow-card: rgba(180, 83, 9, 0.12);
+}
+
+/* ===========================
+   BASE STYLES
+   =========================== */
 body {
   font-family: var(--font-sans);
-  background-color: #0c0a09; /* warm dark slate/stone */
-  color: #f5f5f4;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
   min-height: 100vh;
   overflow-x: hidden;
-  background-image: 
-    radial-gradient(circle at 10% 20%, rgba(180, 83, 9, 0.05) 0%, transparent 40%),
-    radial-gradient(circle at 90% 80%, rgba(217, 119, 6, 0.05) 0%, transparent 40%);
+  background-image:
+    radial-gradient(circle at 10% 20%, var(--noise-1) 0%, transparent 40%),
+    radial-gradient(circle at 90% 80%, var(--noise-2) 0%, transparent 40%);
+  transition: background-color 0.3s ease, color 0.3s ease;
 }
 
+/* ===========================
+   TYPOGRAPHY
+   =========================== */
 .font-sundanese {
   font-family: 'Noto Sans Sundanese', 'Plus Jakarta Sans', sans-serif;
 }
 
+/* ===========================
+   GRADIENT UTILITIES
+   =========================== */
 .gradient-gold {
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 50%, #b45309 100%);
   -webkit-background-clip: text;
@@ -32,51 +93,209 @@ body {
   background: linear-gradient(135deg, #b45309, #d97706, #f59e0b);
 }
 
+/* ===========================
+   GLASS CARD
+   =========================== */
 .glass-card {
-  background: rgba(28, 25, 23, 0.7);
+  background: var(--bg-surface);
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(120, 113, 108, 0.2);
+  border: 1px solid var(--border-base);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  background: rgba(28, 25, 23, 0.85);
-  border-color: rgba(245, 158, 11, 0.4);
-  box-shadow: 0 12px 30px -10px rgba(217, 119, 6, 0.15);
+  background: var(--bg-surface-hover);
+  border-color: var(--border-hover);
+  box-shadow: 0 12px 30px -10px var(--shadow-card);
   transform: translateY(-2px);
 }
 
-.text-glow {
-  text-shadow: 0 0 30px rgba(245, 158, 11, 0.3);
+/* Light mode glass card extra warmth */
+[data-theme="light"] .glass-card {
+  box-shadow: 0 2px 12px -4px rgba(180, 83, 9, 0.08), 0 1px 3px rgba(0,0,0,0.05);
+}
+[data-theme="light"] .glass-card:hover {
+  box-shadow: 0 12px 30px -10px var(--shadow-card), 0 2px 8px rgba(0,0,0,0.06);
 }
 
-::-webkit-scrollbar {
-  width: 8px;
+/* ===========================
+   TEXT EFFECTS
+   =========================== */
+.text-glow {
+  text-shadow: 0 0 30px var(--glow-color);
 }
-::-webkit-scrollbar-track {
-  background: #1c1917;
+
+/* ===========================
+   TAILWIND COLOR OVERRIDES (via CSS vars)
+   =========================== */
+
+/* Mute stone colours dynamically */
+[data-theme="light"] .text-stone-100 { color: #1c1410; }
+[data-theme="light"] .text-stone-200 { color: #2d1f0e; }
+[data-theme="light"] .text-stone-300 { color: #4a3320; }
+[data-theme="light"] .text-stone-400 { color: #6b4c2a; }
+[data-theme="light"] .text-stone-500 { color: #9a7d5a; }
+[data-theme="light"] .text-stone-600 { color: #b89a6e; }
+
+/* ===========================
+   AMBER → DARK BROWN (LIGHT MODE)
+   lucide-react SVGs use currentColor, so setting `color` on the
+   icon element (or its ancestor) is sufficient to recolour them.
+   =========================== */
+
+/* Text colours */
+[data-theme="light"] .text-amber-200 { color: #92400e !important; }
+[data-theme="light"] .text-amber-300 { color: #92400e !important; }
+[data-theme="light"] .text-amber-400 { color: #7c2d12 !important; }
+[data-theme="light"] .text-amber-500 { color: #78350f !important; }
+[data-theme="light"] .text-amber-600 { color: #78350f !important; }
+
+/* Opacity modifiers produced by Tailwind (text-amber-500/80 etc.) */
+[data-theme="light"] .text-amber-500\/80 { color: rgba(120, 53, 15, 0.85) !important; }
+[data-theme="light"] .text-amber-500\/70 { color: rgba(120, 53, 15, 0.75) !important; }
+[data-theme="light"] .text-amber-500\/60 { color: rgba(120, 53, 15, 0.65) !important; }
+[data-theme="light"] .text-amber-500\/35 { color: rgba(120, 53, 15, 0.45) !important; }
+
+/* SVG icons that carry the colour class directly (lucide-react) */
+[data-theme="light"] svg.text-amber-400,
+[data-theme="light"] svg.text-amber-500 { color: #7c2d12 !important; }
+
+/* Icons nested inside an amber-coloured container –
+   target the SVG via the parent's colour class              */
+[data-theme="light"] .text-amber-400 svg,
+[data-theme="light"] .text-amber-500 svg { color: inherit; }
+
+/* Catch-all: any SVG inside a [data-theme=light] ancestor
+   that Tailwind would colour amber via text-amber-*         */
+[data-theme="light"] svg[class*="text-amber"] { color: #7c2d12 !important; }
+
+/* Hover / group-hover variants */
+[data-theme="light"] .hover\:text-amber-400:hover          { color: #7c2d12 !important; }
+[data-theme="light"] .hover\:text-amber-400:hover svg      { color: #7c2d12 !important; }
+[data-theme="light"] .group:hover .group-hover\:text-amber-400     { color: #7c2d12 !important; }
+[data-theme="light"] .group:hover .group-hover\:text-amber-400 svg { color: #7c2d12 !important; }
+
+/* Animate-bounce / animate-pulse wrappers that carry amber */
+[data-theme="light"] .animate-bounce.text-amber-500,
+[data-theme="light"] .animate-pulse.text-amber-500  { color: #78350f !important; }
+
+/* ===========================
+   OTHER STATUS COLOURS (LIGHT MODE)
+   =========================== */
+[data-theme="light"] .text-emerald-300,
+[data-theme="light"] .text-emerald-400,
+[data-theme="light"] svg.text-emerald-300,
+[data-theme="light"] svg.text-emerald-400 { color: #065f46 !important; }
+
+[data-theme="light"] .text-rose-300,
+[data-theme="light"] .text-rose-400,
+[data-theme="light"] svg.text-rose-300,
+[data-theme="light"] svg.text-rose-400    { color: #9f1239 !important; }
+
+[data-theme="light"] .text-sky-300,
+[data-theme="light"] svg.text-sky-300     { color: #0c4a6e !important; }
+
+[data-theme="light"] .text-purple-300,
+[data-theme="light"] svg.text-purple-300  { color: #581c87 !important; }
+
+/* ===========================
+   AMBER BACKGROUNDS & BORDERS (LIGHT MODE)
+   =========================== */
+[data-theme="light"] .bg-amber-500\/10 { background-color: rgba(180, 83, 9, 0.10); }
+[data-theme="light"] .bg-amber-500\/5  { background-color: rgba(180, 83, 9, 0.06); }
+
+[data-theme="light"] .border-amber-500\/40 { border-color: rgba(120, 53, 15, 0.45); }
+[data-theme="light"] .border-amber-500\/20 { border-color: rgba(120, 53, 15, 0.30); }
+[data-theme="light"] .border-amber-500\/10 { border-color: rgba(120, 53, 15, 0.18); }
+
+/* Amber glow: keep it subtle in light mode */
+[data-theme="light"] .bg-amber-500\/5.blur-\[120px\] { opacity: 0.4; }
+
+/* Amber shadow tokens */
+[data-theme="light"] .shadow-amber-500\/35,
+[data-theme="light"] .shadow-amber-700\/20 { --tw-shadow-color: rgba(120,53,15,0.20); }
+
+[data-theme="light"] .bg-stone-950 { background-color: #faf7f2; }
+[data-theme="light"] .bg-stone-900\/80,
+[data-theme="light"] .bg-stone-950\/80 { background-color: rgba(250,247,242,0.92); }
+[data-theme="light"] .bg-stone-900\/60 { background-color: rgba(243,237,227,0.80); }
+[data-theme="light"] .bg-stone-900\/40 { background-color: rgba(243,237,227,0.55); }
+[data-theme="light"] .bg-stone-900 { background-color: #ede5d6; }
+[data-theme="light"] .bg-stone-800 { background-color: #e2d5bf; }
+
+[data-theme="light"] .border-stone-900 { border-color: rgba(180,120,60,0.18); }
+[data-theme="light"] .border-stone-800 { border-color: rgba(180,120,60,0.20); }
+[data-theme="light"] .border-stone-800\/60 { border-color: rgba(180,120,60,0.15); }
+[data-theme="light"] .border-stone-850 { border-color: rgba(180,120,60,0.16); }
+
+/* Navbar light mode */
+[data-theme="light"] header.glass-card {
+  background: rgba(250, 247, 242, 0.92);
+  border-color: rgba(180, 120, 60, 0.18);
 }
+
+/* Hover states for nav */
+[data-theme="light"] .hover\:bg-stone-900\/40:hover {
+  background-color: rgba(232, 222, 206, 0.65);
+}
+[data-theme="light"] .hover\:text-stone-100:hover { color: #1c1410; }
+
+/* Skeleton loaders */
+[data-theme="light"] .bg-stone-850 { background-color: #ddd0b8; }
+[data-theme="light"] .animate-pulse .bg-stone-800 { background-color: #e0d3ba; }
+[data-theme="light"] .animate-pulse .bg-stone-850 { background-color: #e0d3ba; }
+
+/* Code blocks */
+[data-theme="light"] pre.bg-stone-950\/80 {
+  background: rgba(240, 233, 220, 0.90);
+  color: #b45309;
+}
+
+/* Footer */
+[data-theme="light"] footer {
+  background-color: #f0e9de;
+  border-color: rgba(180, 120, 60, 0.20);
+}
+
+/* ===========================
+   SCROLLBAR
+   =========================== */
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: var(--scrollbar-track); }
 ::-webkit-scrollbar-thumb {
-  background: #44403c;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
-::-webkit-scrollbar-thumb:hover {
-  background: #d97706;
-}
+::-webkit-scrollbar-thumb:hover { background: #d97706; }
 
+/* ===========================
+   ANIMATIONS
+   =========================== */
 @keyframes float {
   0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+  50%       { transform: translateY(-8px); }
 }
-
 .animate-float {
   animation: float 6s ease-in-out infinite;
 }
 
-.glow-border {
-  position: relative;
+/* ===========================
+   PAGE TRANSITION — animate-in on every route mount
+   =========================== */
+@keyframes pageEnter {
+  from { opacity: 0; transform: translateY(12px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
+
+.page-enter {
+  animation: pageEnter 0.38s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ===========================
+   GLOW BORDER
+   =========================== */
+.glow-border { position: relative; }
 .glow-border::after {
   content: '';
   position: absolute;
@@ -88,6 +307,4 @@ body {
   opacity: 0.7;
   transition: opacity 0.3s;
 }
-.glow-border:hover::after {
-  opacity: 1;
-}
+.glow-border:hover::after { opacity: 1; }

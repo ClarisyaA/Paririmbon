@@ -3,8 +3,9 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Sparkles, BookOpen, Network, Globe, FileText } from "lucide-react";
+import { BookOpen, Network, Globe, FileText } from "lucide-react";
 import gsap from "gsap";
+import { useQuery } from "@tanstack/react-query";
 
 interface Manuscript {
   uri: string;
@@ -13,48 +14,43 @@ interface Manuscript {
   wordCount: number;
 }
 
+const FALLBACK_MANUSCRIPTS: Manuscript[] = [
+  { uri: "https://paririmbon.org/Manuscript/SanghyangSiksakandaNgKaresian", title: "Sanghyang Siksakanda Ng Karesian", period: "Abad 16 Masehi (1518 M)", wordCount: 412 },
+  { uri: "https://paririmbon.org/Manuscript/CaritaParahyangan", title: "Carita Parahyangan", period: "Akhir Abad 16 Masehi", wordCount: 320 },
+  { uri: "https://paririmbon.org/Manuscript/SanghyangRagaDewata", title: "Sanghyang Raga Dewata", period: "Abad 15 Masehi", wordCount: 184 },
+  { uri: "https://paririmbon.org/Manuscript/AmanatGalunggung", title: "Amanat Galunggung (Kropak 632)", period: "Abad 15 Masehi", wordCount: 156 },
+  { uri: "https://paririmbon.org/Manuscript/SewakaDarman", title: "Sewaka Darman", period: "Abad 16 Masehi", wordCount: 122 },
+];
+
 export default function Home() {
   const router = useRouter();
   const [searchQuery, setSearchQuery] = useState("");
-  const [manuscripts, setManuscripts] = useState<Manuscript[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [fusekiStatus, setFusekiStatus] = useState<"connected" | "disconnected" | "checking">("checking");
+
+  const { data: manuscriptsData, error, isLoading } = useQuery({
+    queryKey: ["manuscripts"],
+    queryFn: async () => {
+      const res = await fetch("/api/naskah");
+      if (!res.ok) throw new Error("Fuseki unreachable");
+      const json = await res.json();
+      if (!json.manuscripts) throw new Error("Invalid response");
+      return json.manuscripts as Manuscript[];
+    },
+    retry: false,
+  });
+
+  const manuscripts = manuscriptsData || (error ? FALLBACK_MANUSCRIPTS : []);
+  const fusekiStatus = isLoading
+    ? "checking"
+    : error
+      ? "disconnected"
+      : "connected";
+
+  const loading = isLoading;
 
   const heroRef = useRef<HTMLDivElement>(null);
   const searchCardRef = useRef<HTMLDivElement>(null);
   const statsRef = useRef<HTMLDivElement>(null);
   const manuscriptsRef = useRef<HTMLDivElement>(null);
-
-  // Fetch manuscripts and check Fuseki status
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await fetch("/api/naskah");
-        if (!res.ok) throw new Error("Fuseki unreachable");
-        const data = await res.json();
-        if (data.manuscripts) {
-          setManuscripts(data.manuscripts);
-          setFusekiStatus("connected");
-        } else {
-          throw new Error("Invalid response");
-        }
-      } catch (err) {
-        console.warn("Fuseki not running or error fetching manuscripts:", err);
-        setFusekiStatus("disconnected");
-        // Premium fallback data so UI remains gorgeous
-        setManuscripts([
-          { uri: "https://paririmbon.org/Manuscript/SanghyangSiksakandaNgKaresian", title: "Sanghyang Siksakanda Ng Karesian", period: "Abad 16 Masehi (1518 M)", wordCount: 412 },
-          { uri: "https://paririmbon.org/Manuscript/CaritaParahyangan", title: "Carita Parahyangan", period: "Akhir Abad 16 Masehi", wordCount: 320 },
-          { uri: "https://paririmbon.org/Manuscript/SanghyangRagaDewata", title: "Sanghyang Raga Dewata", period: "Abad 15 Masehi", wordCount: 184 },
-          { uri: "https://paririmbon.org/Manuscript/AmanatGalunggung", title: "Amanat Galunggung (Kropak 632)", period: "Abad 15 Masehi", wordCount: 156 },
-          { uri: "https://paririmbon.org/Manuscript/SewakaDarman", title: "Sewaka Darman", period: "Abad 16 Masehi", wordCount: 122 },
-        ]);
-      } finally {
-        setLoading(false);
-      }
-    }
-    fetchData();
-  }, []);
 
   // GSAP Animations
   useEffect(() => {
@@ -105,18 +101,18 @@ export default function Home() {
 
   return (
     <div ref={heroRef} className="px-4 md:px-8 py-12 md:py-20 max-w-7xl mx-auto space-y-24">
-      
+
       {/* Hero Section */}
       <section className="text-center max-w-3xl mx-auto space-y-6">
         <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs font-semibold tracking-wider uppercase animate-pulse animate-duration-3000">
-          <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+
           <span>Knowledge Graph & Semantic Engine</span>
         </div>
-        
+
         <h1 className="hero-title text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-glow text-stone-100 font-display">
           Menjelajahi <span className="gradient-gold">Paririmbon</span>
         </h1>
-        
+
         <p className="hero-subtitle text-stone-400 text-sm sm:text-lg leading-relaxed">
           Sistem navigasi ontologis untuk menelusuri kosakata, relasi semantik, dan struktur konseptual bahasa Sunda Kuno yang terenkripsi dalam naskah-naskah lontar klasik abad 14–16 Masehi.
         </p>
@@ -206,7 +202,7 @@ export default function Home() {
             <h2 className="text-2xl md:text-3xl font-bold tracking-wide text-stone-100 font-display">Naskah Klasik Terdaftar</h2>
             <p className="text-stone-400 text-xs sm:text-sm">Dokumentasi naskah kuno yang menjadi sumber leksikografis repositori ini.</p>
           </div>
-          <Link 
+          <Link
             href="/search?q=*"
             className="text-amber-500 text-xs font-semibold hover:text-amber-400 flex items-center gap-1.5 transition group"
           >
@@ -225,28 +221,39 @@ export default function Home() {
               </div>
             ))
           ) : (
-            manuscripts.map((ms) => (
-              <div key={ms.uri} className="manuscript-card glass-card p-6 rounded-2xl flex flex-col justify-between hover:-translate-y-1 transition duration-200">
-                <div className="space-y-3">
-                  <div className="flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-amber-500 shrink-0" />
-                    <h3 className="font-bold text-stone-100 font-display line-clamp-1 group-hover:text-amber-400 transition-colors">
-                      {ms.title}
-                    </h3>
+            manuscripts.map((ms) => {
+              // Ekstrak ID naskah dari URI: "https://paririmbon.org/Manuscript/SanghyangSiksakanda" → "SanghyangSiksakanda"
+              const msId = ms.uri.split("/").pop() ?? ms.title.replace(/\s+/g, "");
+              return (
+                <Link
+                  key={ms.uri}
+                  href={`/term/${encodeURIComponent(msId)}`}
+                  className="manuscript-card glass-card p-6 rounded-2xl flex flex-col justify-between hover:-translate-y-1 hover:border-amber-500/30 group transition duration-200 cursor-pointer"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <FileText className="w-4 h-4 text-amber-500 shrink-0" />
+                      <h3 className="font-bold text-stone-100 font-display line-clamp-1 group-hover:text-amber-400 transition-colors">
+                        {ms.title}
+                      </h3>
+                    </div>
+                    <p className="text-stone-400 text-xs line-clamp-2 leading-relaxed">
+                      Estimasi Penulisan: <strong className="text-amber-500/80 font-medium">{ms.period}</strong>
+                    </p>
                   </div>
-                  <p className="text-stone-400 text-xs line-clamp-2 leading-relaxed">
-                    Estimasi Penulisan: <strong className="text-amber-500/80 font-medium">{ms.period}</strong>
-                  </p>
-                </div>
-                
-                <div className="mt-6 pt-4 border-t border-stone-800/60 flex items-center justify-between text-xs text-stone-500">
-                  <span>Jumlah Terminologi</span>
-                  <span className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 font-bold">
-                    {ms.wordCount} Kata
-                  </span>
-                </div>
-              </div>
-            ))
+
+                  <div className="mt-6 pt-4 border-t border-stone-800/60 flex items-center justify-between text-xs text-stone-500">
+                    <span>Jumlah Terminologi</span>
+                    <div className="flex items-center gap-2">
+                      <span className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 font-bold">
+                        {ms.wordCount} Kata
+                      </span>
+                      <span className="text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">→</span>
+                    </div>
+                  </div>
+                </Link>
+              );
+            })
           )}
         </div>
       </section>
