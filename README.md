@@ -1,6 +1,6 @@
 # Paririmbon - Terminologi Sunda Kuno (Knowledge Graph & Semantic Search)
 <img src="./app/public/ParirimbonLogo.png" width="200" alt="Siti Aisyah" />
-Paririmbon adalah aplikasi penelusuran digital dan pencarian semantik (*semantic search*) interaktif untuk menjelajahi terminologi Sunda Kuno dari **11 naskah klasik (manuskrip)** abad 14–16 Masehi. 
+Paririmbon adalah aplikasi penelusuran digital dan pencarian semantik (*semantic search*) interaktif untuk menjelajahi terminologi Sunda Kuno dari 11 naskah klasik (manuskrip) abad 14–16 Masehi. 
 
 Aplikasi ini mengintegrasikan **Knowledge Graph** berbasis standar semantik internasional **RDF/OWL** dengan triplestore **Apache Jena Fuseki** sebagai mesin kueri **SPARQL 1.1**, dan disajikan dengan antarmuka web modern yang tangguh menggunakan **Next.js 15**, **Tailwind CSS v4**, **GSAP Animations**, dan **TanStack Query (React Query)**.
 
