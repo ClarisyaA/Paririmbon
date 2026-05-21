@@ -1,0 +1,519 @@
+"use client";
+
+import React, { useState, useEffect, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import Link from "next/link";
+import { Search, SearchX, AlertCircle, FileText, Compass } from "lucide-react";
+
+interface SearchResult {
+  id: string;
+  label: string;
+  scriptTerm: string | null;
+  definition: string | null;
+  wordClass: string | null;
+  manuscriptTitle: string | null;
+}
+
+// Simulated mock search results for offline mode
+const MOCK_RESULTS: SearchResult[] = [
+  {
+    id: "sanghyang",
+    label: "Sanghyang",
+    scriptTerm: "ᮞᮀᮠᮡᮀ",
+    definition: "Sebutan kehormatan untuk entitas suci, dewata, kekuatan gaib tertinggi, atau spiritualitas tinggi dalam kebudayaan Sunda Kuno.",
+    wordClass: "SundaKunoTerm",
+    manuscriptTitle: "Sanghyang Siksakanda Ng Karesian"
+  },
+  {
+    id: "tapa",
+    label: "Tapa",
+    scriptTerm: "ᮒᮕ",
+    definition: "Praktik asketisme, meditasi mendalam, atau pengekangan diri dari nafsu duniawi untuk mencapai kesadaran spiritual spiritual tinggi.",
+    wordClass: "SundaKunoTerm",
+    manuscriptTitle: "Amanat Galunggung (Kropak 632)"
+  },
+  {
+    id: "raga",
+    label: "Raga",
+    scriptTerm: "ᮛᮌ",
+    definition: "Badan kasar, jasmani manusia yang menjadi wadah bagi suksma (jiwa) dalam mengarungi kehidupan materiil di bumi.",
+    wordClass: "SundaKunoTerm",
+    manuscriptTitle: "Sanghyang Raga Dewata"
+  },
+  {
+    id: "darma",
+    label: "Darma",
+    scriptTerm: "ᮓᮁᮙ",
+    definition: "Kewajiban moral, kebajikan, hukum alam semesta, atau kebenaran sejati yang harus dijunjung oleh setiap insan.",
+    wordClass: "SundaKunoTerm",
+    manuscriptTitle: "Sewaka Darman"
+  },
+  {
+    id: "kerta",
+    label: "Kerta",
+    scriptTerm: "ᮊᮨᮁᮒ",
+    definition: "Keadaan damai, sejahtera, makmur, tenteram, atau ketertiban sosial yang dicapai melalui kepatuhan hukum adat.",
+    wordClass: "SundaKunoTerm",
+    manuscriptTitle: "Carita Parahyangan"
+  },
+  {
+    id: "Manuscript_SanghyangSiksakandaNgKaresian",
+    label: "Sanghyang Siksakanda Ng Karesian",
+    scriptTerm: null,
+    definition: "Naskah lontar Sunda Klasik bertarikh 1518 Masehi, memuat tuntunan moral, susunan kemasyarakatan, keagamaan, dan keterampilan hidup karesian.",
+    wordClass: "Manuscript",
+    manuscriptTitle: "Sanghyang Siksakanda Ng Karesian"
+  },
+  {
+    id: "Manuscript_CaritaParahyangan",
+    label: "Carita Parahyangan",
+    scriptTerm: null,
+    definition: "Naskah sejarah Sunda Kuno yang menceritakan silsilah raja-raja Sunda-Galuh mulai dari era Sanjaya hingga keruntuhan Pajajaran.",
+    wordClass: "Manuscript",
+    manuscriptTitle: "Carita Parahyangan"
+  },
+  {
+    id: "Manuscript_SewakaDarman",
+    label: "Sewaka Darman",
+    scriptTerm: null,
+    definition: "Naskah bercorak keagamaan Buddha-Sunda kuno yang berisi ajaran kebaktian (sewaka) dan pengabdian hidup keagamaan.",
+    wordClass: "Manuscript",
+    manuscriptTitle: "Sewaka Darman"
+  }
+];
+
+function SearchContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const queryParam = searchParams.get("q") ?? "";
+  const classParam = searchParams.get("class") ?? "";
+
+  const [searchQuery, setSearchQuery] = useState(queryParam === "*" ? "" : queryParam);
+  const [selectedClass, setSelectedClass] = useState(classParam);
+  const [results, setResults] = useState<SearchResult[]>([]);
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(Number(searchParams.get("page") ?? "1"));
+  const [selectedLimit, setSelectedLimit] = useState(searchParams.get("limit") ?? "10");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isOffline, setIsOffline] = useState(false);
+
+  const limitVal = selectedLimit === "all" ? -1 : Number(selectedLimit);
+  const totalPages = limitVal === -1 ? 1 : Math.ceil(total / limitVal);
+
+  // Sync state with URL params
+  useEffect(() => {
+    const pageNum = Number(searchParams.get("page") ?? "1");
+    const lim = searchParams.get("limit") ?? "10";
+
+    setSearchQuery(queryParam === "*" ? "" : queryParam);
+    setSelectedClass(classParam);
+    setCurrentPage(pageNum);
+    setSelectedLimit(lim);
+
+    if (queryParam) {
+      performSearch(queryParam, classParam, pageNum, lim);
+    } else {
+      setResults([]);
+      setTotal(0);
+    }
+  }, [queryParam, classParam, searchParams]);
+
+  const performSearch = async (q: string, cls: string, pageNum: number, lim: string) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const limitVal = lim === "all" ? -1 : Number(lim);
+      const offsetVal = (pageNum - 1) * (limitVal === -1 ? 0 : limitVal);
+
+      const url = `/api/search?q=${encodeURIComponent(q)}` +
+                  `${cls ? `&class=${encodeURIComponent(cls)}` : ""}` +
+                  `&limit=${lim}` +
+                  `&offset=${offsetVal}`;
+      const res = await fetch(url);
+      if (!res.ok) throw new Error("Fuseki server error");
+      const data = await res.json();
+      
+      if (data.results) {
+        setResults(data.results);
+        setTotal(data.total ?? data.results.length);
+        setIsOffline(false);
+      } else {
+        throw new Error("Invalid format");
+      }
+    } catch (err) {
+      console.warn("Search API failed, falling back to mock search:", err);
+      setIsOffline(true);
+      // Simulate keyword matching offline with category class filtering
+      let baseList = MOCK_RESULTS;
+      if (cls === "SundaKunoTerm") {
+        baseList = MOCK_RESULTS.filter((item) => item.wordClass !== "Manuscript");
+      } else if (cls === "Manuscript") {
+        baseList = MOCK_RESULTS.filter((item) => item.wordClass === "Manuscript");
+      }
+
+      let matches = [];
+      if (q === "*") {
+        matches = baseList;
+      } else {
+        const regex = new RegExp(q.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"), "i");
+        matches = baseList.filter(
+          (item) =>
+            regex.test(item.label) ||
+            (item.definition && regex.test(item.definition)) ||
+            (item.manuscriptTitle && regex.test(item.manuscriptTitle))
+        );
+      }
+
+      const limitVal = lim === "all" ? -1 : Number(lim);
+      const offsetVal = (pageNum - 1) * (limitVal === -1 ? 0 : limitVal);
+      const sliced = limitVal === -1 ? matches : matches.slice(offsetVal, offsetVal + limitVal);
+
+      setResults(sliced);
+      setTotal(matches.length);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    const queryToSubmit = searchQuery.trim() === "" ? "*" : searchQuery.trim();
+    updateURL(queryToSubmit, selectedClass, 1, selectedLimit);
+  };
+
+  const handleFilterClass = (cls: string) => {
+    setSelectedClass(cls);
+    const queryToSubmit = searchQuery.trim() === "" ? "*" : searchQuery.trim();
+    updateURL(queryToSubmit, cls, 1, selectedLimit);
+  };
+
+  const handleLimitChange = (lim: string) => {
+    setSelectedLimit(lim);
+    const queryToSubmit = searchQuery.trim() === "" ? "*" : searchQuery.trim();
+    updateURL(queryToSubmit, selectedClass, 1, lim);
+  };
+
+  const handlePageChange = (pageNum: number) => {
+    setCurrentPage(pageNum);
+    const queryToSubmit = searchQuery.trim() === "" ? "*" : searchQuery.trim();
+    updateURL(queryToSubmit, selectedClass, pageNum, selectedLimit);
+  };
+
+  const updateURL = (q: string, cls: string, pageNum: number, lim: string) => {
+    const params = new URLSearchParams();
+    if (q.trim()) {
+      params.set("q", q.trim());
+    } else {
+      params.set("q", "*");
+    }
+    if (cls) params.set("class", cls);
+    if (pageNum > 1) params.set("page", String(pageNum));
+    if (lim !== "10") params.set("limit", lim);
+    router.push(`/search?${params.toString()}`);
+  };
+
+  // Highlighting function
+  const highlightText = (text: string | null, search: string) => {
+    if (!text) return "";
+    if (!search.trim() || search === "*") return text;
+    const regex = new RegExp(`(${search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")})`, "gi");
+    const parts = text.split(regex);
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <mark key={index} className="bg-amber-500/35 text-amber-200 px-1 py-0.5 rounded font-medium border border-amber-500/20">
+          {part}
+        </mark>
+      ) : (
+        part
+      )
+    );
+  };
+
+  return (
+    <div className="max-w-7xl mx-auto px-4 md:px-8 py-12 grid grid-cols-1 lg:grid-cols-4 gap-8">
+      
+      {/* Filters Sidebar */}
+      <aside className="space-y-6 lg:col-span-1">
+        <div className="glass-card p-6 rounded-2xl space-y-6 sticky top-28">
+          <div>
+            <h3 className="text-stone-100 font-bold text-base tracking-wide font-display mb-3">Filter Kategori</h3>
+            <div className="flex flex-wrap lg:flex-col gap-2">
+              <button
+                onClick={() => handleFilterClass("")}
+                className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
+                  selectedClass === ""
+                    ? "gradient-gold-bg text-stone-950 font-bold shadow-lg shadow-amber-700/20"
+                    : "text-stone-400 bg-stone-900/40 hover:bg-stone-900 hover:text-stone-200"
+                }`}
+              >
+                Semua Kelas
+              </button>
+              <button
+                onClick={() => handleFilterClass("SundaKunoTerm")}
+                className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
+                  selectedClass === "SundaKunoTerm"
+                    ? "gradient-gold-bg text-stone-950 font-bold shadow-lg shadow-amber-700/20"
+                    : "text-stone-400 bg-stone-900/40 hover:bg-stone-900 hover:text-stone-200"
+                }`}
+              >
+                Kosakata (Term)
+              </button>
+              <button
+                onClick={() => handleFilterClass("Manuscript")}
+                className={`w-full text-left px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition ${
+                  selectedClass === "Manuscript"
+                    ? "gradient-gold-bg text-stone-950 font-bold shadow-lg shadow-amber-700/20"
+                    : "text-stone-400 bg-stone-900/40 hover:bg-stone-900 hover:text-stone-200"
+                }`}
+              >
+                Naskah (Manuscript)
+              </button>
+            </div>
+          </div>
+
+          <div className="pt-4 border-t border-stone-800 text-[11px] text-stone-500 leading-relaxed space-y-2">
+            <h4 className="font-semibold text-stone-400 uppercase tracking-widest">Informasi</h4>
+            <p>Pencarian menggunakan regex memindai properti <code>rdfs:label</code> dan <code>pari:definition</code> pada repositori RDF.</p>
+            {isOffline && (
+              <p className="text-amber-500 font-semibold bg-amber-500/5 p-2 rounded border border-amber-500/10 flex items-start gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-amber-500 shrink-0 mt-0.5" />
+                <span>Menampilkan hasil simulasi karena server Apache Jena Fuseki tidak terjangkau.</span>
+              </p>
+            )}
+          </div>
+        </div>
+      </aside>
+
+      {/* Main Results Column */}
+      <section className="lg:col-span-3 space-y-8">
+        {/* Top Search Bar */}
+        <form onSubmit={handleSearchSubmit} className="glass-card p-2 rounded-2xl flex gap-2">
+          <div className="flex-grow flex items-center px-4 gap-2">
+            <Search className="w-5 h-5 text-stone-500 shrink-0" />
+            <input
+              type="text"
+              placeholder="Ketik kosakata Sunda Kuno atau makna kata..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full py-3 bg-transparent text-stone-100 placeholder-stone-500 focus:outline-none text-sm md:text-base"
+            />
+          </div>
+          <button
+            type="submit"
+            className="gradient-gold-bg hover:opacity-90 active:scale-95 text-stone-950 font-bold px-6 py-3 rounded-xl transition duration-200 text-sm whitespace-nowrap cursor-pointer shadow-lg shadow-amber-700/20"
+          >
+            Cari
+          </button>
+        </form>
+
+        {/* Results Metadata */}
+        {queryParam && !loading && (
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs text-stone-400">
+            <p>
+              Ditemukan <span className="text-amber-400 font-bold">{total}</span> hasil pencarian untuk &quot;<span className="text-stone-200 italic font-medium">{queryParam === "*" ? "Semua" : queryParam}</span>&quot;
+            </p>
+            
+            {total > 0 && (
+              <div className="flex flex-wrap items-center gap-4">
+                {/* Limit Selector */}
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] text-stone-500 uppercase font-semibold tracking-wider">Tampilkan:</span>
+                  <div className="flex bg-stone-900/60 rounded-lg p-0.5 border border-stone-800">
+                    {["5", "10", "20", "50", "all"].map((lim) => (
+                      <button
+                        key={lim}
+                        onClick={() => handleLimitChange(lim)}
+                        type="button"
+                        className={`px-2.5 py-1 rounded-md text-[10px] font-bold uppercase transition select-none cursor-pointer ${
+                          selectedLimit === lim
+                            ? "gradient-gold-bg text-stone-950 font-bold"
+                            : "text-stone-400 hover:text-stone-200"
+                        }`}
+                      >
+                        {lim === "all" ? "Semua" : lim}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                <span className="text-[10px] text-stone-500 tracking-wider uppercase font-semibold">Urut abjad</span>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Error Banner */}
+        {error && (
+          <div className="glass-card p-4 rounded-xl border-rose-500/20 bg-rose-500/5 text-rose-400 text-xs flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
+            <p>{error}</p>
+          </div>
+        )}
+
+        {/* Results State */}
+        {loading ? (
+          <div className="space-y-4">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <div key={i} className="glass-card p-6 rounded-2xl animate-pulse space-y-4">
+                <div className="h-6 bg-stone-850 rounded w-1/3" />
+                <div className="h-4 bg-stone-850 rounded w-full" />
+                <div className="h-4 bg-stone-850 rounded w-2/3" />
+              </div>
+            ))}
+          </div>
+        ) : results.length > 0 ? (
+          <>
+            <div className="space-y-4">
+              {results.map((item) => (
+              <div
+                key={item.id}
+                className="glass-card p-6 rounded-2xl flex flex-col md:flex-row justify-between gap-6 hover:border-amber-500/30 group transition duration-300"
+              >
+                <div className="space-y-3 flex-grow max-w-xl">
+                  {/* Class Badge & Manuscript Info */}
+                  <div className="flex flex-wrap items-center gap-2 text-xs">
+                    <span className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-400 border border-amber-500/20 font-bold text-[10px] uppercase tracking-wider">
+                      {item.wordClass === "Manuscript" ? "Naskah" : "Kosakata"}
+                    </span>
+                    {item.manuscriptTitle && (
+                      <span className="text-stone-500 flex items-center gap-1.5">
+                        <FileText className="w-3.5 h-3.5 text-stone-500 shrink-0" />
+                        <span className="italic line-clamp-1">{item.manuscriptTitle}</span>
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Label */}
+                  <h3 className="text-2xl font-bold text-stone-100 font-display group-hover:text-amber-400 transition-colors">
+                    {highlightText(item.label, queryParam)}
+                  </h3>
+
+                  {/* Definition */}
+                  <p className="text-stone-400 text-sm leading-relaxed">
+                    {highlightText(item.definition, queryParam)}
+                  </p>
+                </div>
+
+                {/* Script and Exploration Link */}
+                <div className="flex md:flex-col items-start md:items-end justify-between md:justify-between shrink-0 gap-4 pt-4 md:pt-0 border-t md:border-t-0 border-stone-800/60">
+                  {item.scriptTerm && (
+                    <div className="text-right">
+                      <span className="text-stone-500 text-[10px] uppercase font-semibold tracking-wider block mb-1">Aksara Sunda</span>
+                      <span className="font-sundanese text-xl text-amber-500 tracking-wider bg-stone-900/60 px-3 py-1.5 rounded-lg border border-stone-800/80 block select-none">
+                        {item.scriptTerm}
+                      </span>
+                    </div>
+                  )}
+
+                  <Link
+                    href={`/term/${encodeURIComponent(item.id)}`}
+                    className="gradient-gold-bg text-stone-950 text-xs font-bold px-4.5 py-2.5 rounded-xl flex items-center gap-1.5 shadow-lg shadow-amber-800/10 hover:shadow-amber-500/20 transition-all select-none hover:scale-105 active:scale-95 cursor-pointer ml-auto md:ml-0"
+                  >
+                    <span>Jelajahi Relasi</span>
+                    <span>→</span>
+                  </Link>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Pagination Controls */}
+          {selectedLimit !== "all" && totalPages > 1 && (
+            <div className="flex items-center justify-between pt-6 border-t border-stone-900">
+              <button
+                onClick={() => handlePageChange(currentPage - 1)}
+                disabled={currentPage === 1}
+                type="button"
+                className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1 cursor-pointer ${
+                  currentPage === 1
+                    ? "text-stone-600 bg-stone-900/10 cursor-not-allowed border border-stone-900/20"
+                    : "text-stone-300 bg-stone-900/40 hover:bg-stone-900 hover:text-amber-400 border border-stone-800"
+                }`}
+              >
+                <span>←</span>
+                <span>Sebelumnya</span>
+              </button>
+
+              <div className="hidden sm:flex items-center gap-1.5">
+                {Array.from({ length: totalPages }).map((_, idx) => {
+                  const pageNum = idx + 1;
+                  // Render a maximum of 7 page buttons, centered around current page
+                  if (totalPages > 7) {
+                    if (pageNum !== 1 && pageNum !== totalPages && Math.abs(currentPage - pageNum) > 2) {
+                      if (pageNum === 2 || pageNum === totalPages - 1) {
+                        return <span key={pageNum} className="text-stone-600 px-1 text-xs select-none">...</span>;
+                      }
+                      return null;
+                    }
+                  }
+                  return (
+                    <button
+                      key={pageNum}
+                      onClick={() => handlePageChange(pageNum)}
+                      type="button"
+                      className={`w-8 h-8 rounded-lg text-xs font-bold transition select-none cursor-pointer ${
+                        currentPage === pageNum
+                          ? "gradient-gold-bg text-stone-950"
+                          : "text-stone-400 bg-stone-900/20 hover:bg-stone-900/60 hover:text-stone-200 border border-stone-850"
+                      }`}
+                    >
+                      {pageNum}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <div className="sm:hidden text-xs text-stone-500 font-medium">
+                Hal {currentPage} dari {totalPages}
+              </div>
+
+              <button
+                onClick={() => handlePageChange(currentPage + 1)}
+                disabled={currentPage === totalPages}
+                type="button"
+                className={`px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider transition flex items-center gap-1 cursor-pointer ${
+                  currentPage === totalPages
+                    ? "text-stone-600 bg-stone-900/10 cursor-not-allowed border border-stone-900/20"
+                    : "text-stone-300 bg-stone-900/40 hover:bg-stone-900 hover:text-amber-400 border border-stone-800"
+                }`}
+              >
+                <span>Selanjutnya</span>
+                <span>→</span>
+              </button>
+            </div>
+          )}
+        </>
+        ) : queryParam ? (
+          <div className="glass-card p-12 rounded-2xl text-center space-y-4">
+            <SearchX className="w-12 h-12 text-stone-500 mx-auto" />
+            <h3 className="text-xl font-bold text-stone-200 font-display">Kosakata Tidak Ditemukan</h3>
+            <p className="text-stone-400 text-sm max-w-sm mx-auto">
+              Tidak ditemukan kosakata yang cocok dengan kata kunci &quot;<span className="text-stone-200">{queryParam === "*" ? "Semua" : queryParam}</span>&quot;. Coba cari kata kunci lainnya.
+            </p>
+          </div>
+        ) : (
+          <div className="glass-card p-12 rounded-2xl text-center space-y-4">
+            <Compass className="w-12 h-12 text-amber-500/70 mx-auto animate-pulse" />
+            <h3 className="text-xl font-bold text-stone-200 font-display">Mulai Penelusuran Semantik</h3>
+            <p className="text-stone-400 text-sm max-w-sm mx-auto">
+              Ketikkan kata kunci di atas untuk mencari istilah dalam naskah kuno Sunda. Contoh pencarian populer: <strong className="text-amber-500">sanghyang</strong>, <strong className="text-amber-500">tapa</strong>, atau <strong className="text-amber-500">raga</strong>.
+            </p>
+          </div>
+        )}
+      </section>
+
+    </div>
+  );
+}
+
+export default function SearchPage() {
+  return (
+    <Suspense fallback={
+      <div className="max-w-7xl mx-auto px-4 py-20 text-center text-stone-400">
+        Memuat mesin pencari...
+      </div>
+    }>
+      <SearchContent />
+    </Suspense>
+  );
+}
