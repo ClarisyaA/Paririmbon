@@ -120,6 +120,34 @@ body {
 }
 
 /* ===========================
+   KNOWLEDGE GRAPH SATELLITE NODES
+   =========================== */
+.satellite-node {
+  backdrop-filter: blur(16px) !important;
+  -webkit-backdrop-filter: blur(16px) !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+}
+
+/* Maintain high-opacity base surface and layer relationship tint */
+.satellite-node.bg-emerald-500\/10 { background: linear-gradient(rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.08)), var(--bg-surface) !important; }
+.satellite-node.bg-rose-500\/10    { background: linear-gradient(rgba(244, 63, 94, 0.08), rgba(244, 63, 94, 0.08)), var(--bg-surface) !important; }
+.satellite-node.bg-sky-500\/10     { background: linear-gradient(rgba(14, 165, 233, 0.08), rgba(14, 165, 233, 0.08)), var(--bg-surface) !important; }
+.satellite-node.bg-purple-500\/10  { background: linear-gradient(rgba(168, 85, 247, 0.08), rgba(168, 85, 247, 0.08)), var(--bg-surface) !important; }
+.satellite-node.bg-amber-500\/10   { background: linear-gradient(rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.08)), var(--bg-surface) !important; }
+
+/* Interactive Hover States - Solid backgrounds to prevent overlapping noise */
+.satellite-node:hover {
+  background: var(--bg-surface-hover) !important;
+  opacity: 1 !important;
+  z-index: 50 !important;
+}
+
+[data-theme="light"] .satellite-node:hover {
+  background: #ffffff !important; /* 100% solid background on light mode hover */
+  border-color: var(--border-hover) !important;
+}
+
+/* ===========================
    TEXT EFFECTS
    =========================== */
 .text-glow {
