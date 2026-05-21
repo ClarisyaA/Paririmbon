@@ -1,5 +1,5 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import Navbar from "./components/Navbar";
@@ -9,6 +9,13 @@ import { NavigationProgress } from "./components/NavigationProgress";
 export const metadata: Metadata = {
   title: "Paririmbon — Terminologi Sunda Kuno",
   description: "Sistem Knowledge Graph & Pencarian Semantik Kosakata Sunda Kuno pada Naskah Klasik",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
 };
 
 export default function RootLayout({
@@ -146,11 +153,12 @@ export default function RootLayout({
 
             {/* ── Bottom bar ── */}
             <div className="pt-5 flex flex-col sm:flex-row items-center justify-between gap-2 text-[11px] text-stone-600">
-              <p>
+              <p className="text-center sm:text-left">
                 Tugas Akhir &nbsp;·&nbsp;
                 <span className="text-stone-500 font-semibold">Semantic Web</span>
                 &nbsp;·&nbsp; Semester Genap 2025/2026 &nbsp;·&nbsp;
-                Teknik Informatika, Universitas Padjadjaran
+                <span className="hidden sm:inline">Teknik Informatika, Universitas Padjadjaran</span>
+                <span className="sm:hidden">Teknik Informatika, Unpad</span>
               </p>
               <p className="shrink-0 text-stone-700">© 2026 Kelompok Paririmbon</p>
             </div>

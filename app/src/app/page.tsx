@@ -3,7 +3,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { BookOpen, Network, Globe, FileText } from "lucide-react";
+import { BookOpen, Network, Globe, FileText, ArrowRight } from "lucide-react";
 import gsap from "gsap";
 import { useQuery } from "@tanstack/react-query";
 
@@ -100,16 +100,15 @@ export default function Home() {
   };
 
   return (
-    <div ref={heroRef} className="px-4 md:px-8 py-12 md:py-20 max-w-7xl mx-auto space-y-24">
+    <div ref={heroRef} className="px-4 md:px-8 py-8 md:py-20 max-w-7xl mx-auto space-y-14 md:space-y-24">
 
       {/* Hero Section */}
-      <section className="text-center max-w-3xl mx-auto space-y-6">
-        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full glass-card border-amber-500/20 bg-amber-500/5 text-amber-400 text-xs font-semibold tracking-wider uppercase animate-pulse animate-duration-3000">
-
+      <section className="text-center max-w-3xl mx-auto space-y-5 md:space-y-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full glass-card border-amber-500/20 bg-amber-500/5 text-amber-400 text-[10px] md:text-xs font-semibold tracking-wider uppercase animate-pulse animate-duration-3000">
           <span>Knowledge Graph & Semantic Engine</span>
         </div>
 
-        <h1 className="hero-title text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-glow text-stone-100 font-display">
+        <h1 className="hero-title text-3xl sm:text-5xl md:text-7xl font-bold tracking-tight text-glow text-stone-100 font-display">
           Menjelajahi <span className="gradient-gold">Paririmbon</span>
         </h1>
 
@@ -207,7 +206,7 @@ export default function Home() {
             className="text-amber-500 text-xs font-semibold hover:text-amber-400 flex items-center gap-1.5 transition group"
           >
             Lihat Semua Kosakata
-            <span className="group-hover:translate-x-1 transition-transform inline-block">→</span>
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform shrink-0" />
           </Link>
         </div>
 
@@ -248,7 +247,7 @@ export default function Home() {
                       <span className="px-2.5 py-1 rounded bg-amber-500/10 text-amber-400 font-bold">
                         {ms.wordCount} Kata
                       </span>
-                      <span className="text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity font-bold">→</span>
+                      <ArrowRight className="w-3.5 h-3.5 text-amber-500 opacity-0 group-hover:opacity-100 transition-opacity shrink-0" />
                     </div>
                   </div>
                 </Link>

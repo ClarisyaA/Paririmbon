@@ -20,11 +20,11 @@ export default function AboutPage() {
   }, []);
 
   return (
-    <div ref={containerRef} className="max-w-5xl mx-auto px-4 md:px-8 py-12 md:py-20 space-y-16">
+    <div ref={containerRef} className="max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-20 space-y-10 md:space-y-16">
       
       {/* Title Header */}
-      <section className="text-center space-y-4 max-w-3xl mx-auto">
-        <h1 className="about-fade text-4xl md:text-5xl font-bold tracking-tight text-glow text-stone-100 font-display">
+      <section className="text-center space-y-3 md:space-y-4 max-w-3xl mx-auto">
+        <h1 className="about-fade text-3xl md:text-5xl font-bold tracking-tight text-glow text-stone-100 font-display">
           Tentang Proyek <span className="gradient-gold">Paririmbon</span>
         </h1>
         <p className="about-fade text-stone-400 text-sm sm:text-base leading-relaxed">
@@ -136,16 +136,16 @@ PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>`}
         </h2>
 
         {/* 3 Member Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
           {/* Card 1: Siti Aisyah Nurdyanti */}
-          <div className="glass-card p-6 rounded-3xl flex flex-col items-center text-center space-y-4 hover:border-amber-500/35 transition">
-            <div className="w-44 h-44 rounded-2xl overflow-hidden border border-stone-850 bg-stone-900/60 relative flex items-center justify-center">
+          <div className="glass-card p-5 md:p-6 rounded-3xl flex flex-col items-center text-center space-y-4 hover:border-amber-500/35 transition">
+            <div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden border border-stone-850 bg-stone-900/60 relative flex items-center justify-center">
               <Image
                 src="/Ica.jpg"
                 alt="Siti Aisyah Nurdyanti"
                 width={176}
                 height={176}
-                className="w-full h-full object-cover grayscale brightness-90 hover:grayscale-0 hover:scale-105 transition duration-300"
+                className="w-full h-full object-cover md:grayscale brightness-90 md:hover:grayscale-0 hover:scale-105 transition duration-300"
               />
             </div>
             <div className="space-y-1">
@@ -159,14 +159,14 @@ PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>`}
           </div>
 
           {/* Card 2: Clarisya Adeline */}
-          <div className="glass-card p-6 rounded-3xl flex flex-col items-center text-center space-y-4 hover:border-amber-500/35 transition">
-            <div className="w-44 h-44 rounded-2xl overflow-hidden border border-stone-850 bg-stone-900/60 relative flex items-center justify-center">
+          <div className="glass-card p-5 md:p-6 rounded-3xl flex flex-col items-center text-center space-y-4 hover:border-amber-500/35 transition">
+            <div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden border border-stone-850 bg-stone-900/60 relative flex items-center justify-center">
               <Image
                 src="/Cla.jpg"
                 alt="Clarisya Adeline"
                 width={176}
                 height={176}
-                className="w-full h-full object-cover grayscale brightness-90 hover:grayscale-0 hover:scale-105 transition duration-300"
+                className="w-full h-full object-cover md:grayscale brightness-90 md:hover:grayscale-0 hover:scale-105 transition duration-300"
               />
             </div>
             <div className="space-y-1">
@@ -180,14 +180,14 @@ PREFIX xsd:  <http://www.w3.org/2001/XMLSchema#>`}
           </div>
 
           {/* Card 3: Nazwa Nashatasya */}
-          <div className="glass-card p-6 rounded-3xl flex flex-col items-center text-center space-y-4 hover:border-amber-500/35 transition">
-            <div className="w-44 h-44 rounded-2xl overflow-hidden border border-stone-850 bg-stone-900/60 relative flex items-center justify-center">
+          <div className="glass-card p-5 md:p-6 rounded-3xl flex flex-col items-center text-center space-y-4 hover:border-amber-500/35 transition">
+            <div className="w-36 h-36 md:w-44 md:h-44 rounded-2xl overflow-hidden border border-stone-850 bg-stone-900/60 relative flex items-center justify-center">
               <Image
                 src="/Awa.jpg"
                 alt="Nazwa Nashatasya"
                 width={176}
                 height={176}
-                className="w-full h-full object-cover grayscale brightness-90 hover:grayscale-0 hover:scale-105 transition duration-300"
+                className="w-full h-full object-cover md:grayscale brightness-90 md:hover:grayscale-0 hover:scale-105 transition duration-300"
               />
             </div>
             <div className="space-y-1">
