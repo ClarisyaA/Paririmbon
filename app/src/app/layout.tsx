@@ -7,7 +7,7 @@ import Providers from "./providers";
 import { NavigationProgress } from "./components/NavigationProgress";
 
 export const metadata: Metadata = {
-  title: "Paririmbon — Terminologi Sunda Kuno",
+  title: "Paririmbon - Terminologi Sunda Kuno",
   description: "Sistem Knowledge Graph & Pencarian Semantik Kosakata Sunda Kuno pada Naskah Klasik",
 };
 
